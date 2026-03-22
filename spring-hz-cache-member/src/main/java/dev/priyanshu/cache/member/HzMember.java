@@ -1,9 +1,9 @@
 package dev.priyanshu.cache.member;
 
-import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -50,9 +50,14 @@ public class HzMember implements CommandLineRunner {
 
 
      */
+
+    @Autowired
+    HazelcastInstance hzInstance;
+
+
     @Override
     public void run(String... args) throws Exception {
-        HazelcastInstance hz = Hazelcast.newHazelcastInstance();
+        HazelcastInstance hz = hzInstance;
         log.info("{} groupname {}",hz.getName(),  hz.getConfig().getClusterName());
 
         IMap<String, String> testMap = hz.getMap("test-map");
