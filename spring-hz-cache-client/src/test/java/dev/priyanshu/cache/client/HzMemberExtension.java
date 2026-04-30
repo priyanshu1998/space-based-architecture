@@ -29,13 +29,13 @@ public class HzMemberExtension implements BeforeAllCallback, AfterAllCallback, P
 
     @Override
     public void beforeAll(ExtensionContext context) {
-        HazelcastInstance member = Hazelcast.newHazelcastInstance(new Config());
-        context.getStore(NAMESPACE).put(MEMBER_KEY, member);
+        HazelcastInstance member = Hazelcast.newHazelcastInstance(createConfig());
+        context.getRoot().getStore(NAMESPACE).put(MEMBER_KEY, member);
     }
 
     @Override
     public void afterAll(ExtensionContext context) {
-        HazelcastInstance member = context.getStore(NAMESPACE)
+        HazelcastInstance member = context.getRoot().getStore(NAMESPACE)
                 .remove(MEMBER_KEY, HazelcastInstance.class);
         if (member != null) {
             member.shutdown();
@@ -49,10 +49,16 @@ public class HzMemberExtension implements BeforeAllCallback, AfterAllCallback, P
 
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) {
-        // The member is stored in the class-level context; method-level contexts have it as parent.
-        return extensionContext.getParent()
-                .orElse(extensionContext)
-                .getStore(NAMESPACE)
-                .get(MEMBER_KEY, HazelcastInstance.class);
+        return extensionContext.getRoot().getStore(NAMESPACE).get(MEMBER_KEY, HazelcastInstance.class);
+    }
+
+    /**
+     * Override to supply a custom {@link Config} for the embedded member.
+     * Defaults to {@code new Config()}.
+     *
+     * @return the Hazelcast configuration to use when starting the embedded member
+     */
+    protected Config createConfig() {
+        return new Config();
     }
 }
