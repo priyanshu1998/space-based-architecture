@@ -3,11 +3,9 @@ package dev.priyanshu.cache.client;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
-import com.hazelcast.config.Config;
-import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,26 +19,14 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+@ExtendWith(HzMemberExtension.class)
 @SpringBootTest
 class HzClientIntegrationTest {
 
     private static final String TOPIC_NAME = "my-topic";
 
-    /*
-     * An embedded Hazelcast member is started before the Spring context is created.
-     * HzClient's own static initializer calls HazelcastClient.newHazelcastClient(),
-     * which needs to find a live member (localhost:5701 by default). Shutting the
-     * member down in @AfterAll keeps the test JVM clean.
-     */
-    private static final HazelcastInstance member = Hazelcast.newHazelcastInstance(new Config());
-
     @Autowired
     private HzClient hzClient;
-
-    @AfterAll
-    static void tearDown() {
-        member.shutdown();
-    }
 
     @Test
     void contextLoads() {
@@ -48,7 +34,7 @@ class HzClientIntegrationTest {
     }
 
     @Test
-    void testPublishSendsMessageToTopic() throws Exception {
+    void testPublishSendsMessageToTopic(HazelcastInstance member) throws Exception {
         List<String> receivedMessages = new CopyOnWriteArrayList<>();
         CountDownLatch latch = new CountDownLatch(1);
 
@@ -66,7 +52,7 @@ class HzClientIntegrationTest {
     }
 
     @Test
-    void testSubscribeReceivesPublishedMessage() {
+    void testSubscribeReceivesPublishedMessage(HazelcastInstance member) {
         Logger hzClientLogger = (Logger) LoggerFactory.getLogger(HzClient.class);
         ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
         listAppender.start();
