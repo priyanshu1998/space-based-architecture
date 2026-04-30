@@ -24,18 +24,15 @@ import static org.awaitility.Awaitility.await;
 @SpringBootTest
 class HzClientIntegrationTest {
 
-    /*
-     * An embedded Hazelcast member is started in a static initializer so that it is
-     * running before the Spring context is created. HzClient's own static initializer
-     * calls HazelcastClient.newHazelcastClient(), which needs to find a live member
-     * (localhost:5701 by default). Shutting the member down in @AfterAll keeps the
-     * test JVM clean.
-     */
-    private static final HazelcastInstance member;
+    private static final String TOPIC_NAME = "my-topic";
 
-    static {
-        member = Hazelcast.newHazelcastInstance(new Config());
-    }
+    /*
+     * An embedded Hazelcast member is started before the Spring context is created.
+     * HzClient's own static initializer calls HazelcastClient.newHazelcastClient(),
+     * which needs to find a live member (localhost:5701 by default). Shutting the
+     * member down in @AfterAll keeps the test JVM clean.
+     */
+    private static final HazelcastInstance member = Hazelcast.newHazelcastInstance(new Config());
 
     @Autowired
     private HzClient hzClient;
@@ -55,7 +52,7 @@ class HzClientIntegrationTest {
         List<String> receivedMessages = new CopyOnWriteArrayList<>();
         CountDownLatch latch = new CountDownLatch(1);
 
-        member.getTopic("my-topic").addMessageListener(message -> {
+        member.getTopic(TOPIC_NAME).addMessageListener(message -> {
             receivedMessages.add((String) message.getMessageObject());
             latch.countDown();
         });
@@ -83,7 +80,7 @@ class HzClientIntegrationTest {
              * exercises that listener end-to-end.
              */
             String testMessage = "Integration test message";
-            member.getTopic("my-topic").publish(testMessage);
+            member.getTopic(TOPIC_NAME).publish(testMessage);
 
             await().atMost(Duration.ofSeconds(5))
                     .untilAsserted(() ->
