@@ -13,6 +13,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class HzMember implements CommandLineRunner {
 
+  public HzMember(HazelcastInstance hzInstance) {
+    this.hzInstance = hzInstance;
+  }
+
   private static class HzConstants {
     // Maps
     public static String TEST_MAP = "test-map";
@@ -60,7 +64,7 @@ public class HzMember implements CommandLineRunner {
 
    */
 
-  @Autowired HazelcastInstance hzInstance;
+  private final HazelcastInstance hzInstance;
 
   public static IMap<String, String> testMap;
   public static ITopic<String> testTopic;
