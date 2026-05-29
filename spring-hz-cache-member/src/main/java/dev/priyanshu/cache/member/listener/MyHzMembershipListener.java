@@ -6,13 +6,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class MyHzMembershipListener implements MembershipListener {
-    @Override
-    public void memberAdded(MembershipEvent membershipEvent) {
-        log.info("Member added :: {}", membershipEvent.getMember().getUuid());
-    }
+  @Override
+  public void memberAdded(MembershipEvent membershipEvent) {
+    log.info("Member added :: {}", membershipEvent.getMember().getUuid());
+  }
 
-    @Override
-    public void memberRemoved(MembershipEvent membershipEvent) {
-        log.info("Member removed :: {}", membershipEvent.getMember().getUuid());
-    }
+  @Override
+  public void memberRemoved(MembershipEvent membershipEvent) {
+    log.info("Member removed :: {}", membershipEvent.getMember().getUuid());
+  }
 }
