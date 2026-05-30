@@ -10,11 +10,12 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
 /**
- * JUnit 5 extension that starts an embedded Hazelcast member before any tests in
- * the annotated class run and shuts it down once all tests have completed.
+ * JUnit 5 extension that starts an embedded Hazelcast member before any tests in the annotated
+ * class run and shuts it down once all tests have completed.
  *
- * <p>Test methods that need direct access to the member can declare a
- * {@link HazelcastInstance} parameter and it will be resolved automatically:
+ * <p>Test methods that need direct access to the member can declare a {@link HazelcastInstance}
+ * parameter and it will be resolved automatically:
+ *
  * <pre>{@code
  * @Test
  * void myTest(HazelcastInstance member) { ... }
@@ -22,43 +23,45 @@ import org.junit.jupiter.api.extension.ParameterResolver;
  */
 public class HzMemberExtension implements BeforeAllCallback, AfterAllCallback, ParameterResolver {
 
-    private static final ExtensionContext.Namespace NAMESPACE =
-            ExtensionContext.Namespace.create(HzMemberExtension.class);
+  private static final ExtensionContext.Namespace NAMESPACE =
+      ExtensionContext.Namespace.create(HzMemberExtension.class);
 
-    private static final String MEMBER_KEY = "hazelcastMember";
+  private static final String MEMBER_KEY = "hazelcastMember";
 
-    @Override
-    public void beforeAll(ExtensionContext context) {
-        HazelcastInstance member = Hazelcast.newHazelcastInstance(createConfig());
-        context.getRoot().getStore(NAMESPACE).put(MEMBER_KEY, member);
+  @Override
+  public void beforeAll(ExtensionContext context) {
+    HazelcastInstance member = Hazelcast.newHazelcastInstance(createConfig());
+    context.getRoot().getStore(NAMESPACE).put(MEMBER_KEY, member);
+  }
+
+  @Override
+  public void afterAll(ExtensionContext context) {
+    HazelcastInstance member =
+        context.getRoot().getStore(NAMESPACE).remove(MEMBER_KEY, HazelcastInstance.class);
+    if (member != null) {
+      member.shutdown();
     }
+  }
 
-    @Override
-    public void afterAll(ExtensionContext context) {
-        HazelcastInstance member = context.getRoot().getStore(NAMESPACE)
-                .remove(MEMBER_KEY, HazelcastInstance.class);
-        if (member != null) {
-            member.shutdown();
-        }
-    }
+  @Override
+  public boolean supportsParameter(
+      ParameterContext parameterContext, ExtensionContext extensionContext) {
+    return HazelcastInstance.class.isAssignableFrom(parameterContext.getParameter().getType());
+  }
 
-    @Override
-    public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) {
-        return HazelcastInstance.class.isAssignableFrom(parameterContext.getParameter().getType());
-    }
+  @Override
+  public Object resolveParameter(
+      ParameterContext parameterContext, ExtensionContext extensionContext) {
+    return extensionContext.getRoot().getStore(NAMESPACE).get(MEMBER_KEY, HazelcastInstance.class);
+  }
 
-    @Override
-    public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) {
-        return extensionContext.getRoot().getStore(NAMESPACE).get(MEMBER_KEY, HazelcastInstance.class);
-    }
-
-    /**
-     * Override to supply a custom {@link Config} for the embedded member.
-     * Defaults to {@code new Config()}.
-     *
-     * @return the Hazelcast configuration to use when starting the embedded member
-     */
-    protected Config createConfig() {
-        return new Config();
-    }
+  /**
+   * Override to supply a custom {@link Config} for the embedded member. Defaults to {@code new
+   * Config()}.
+   *
+   * @return the Hazelcast configuration to use when starting the embedded member
+   */
+  protected Config createConfig() {
+    return new Config();
+  }
 }
