@@ -4,8 +4,9 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
 import com.hazelcast.topic.ITopic;
 import dev.priyanshu.cache.member.listener.MyHzMessageListener;
+import java.util.Map;
+import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -66,18 +67,28 @@ public class HzMember implements CommandLineRunner {
 
   private final HazelcastInstance hzInstance;
 
-  public static IMap<String, String> testMap;
+  public static Map<String, String> testMap;
   public static ITopic<String> testTopic;
+
+  public <K, V> Map<K, V> getHzMap(String name) {
+    Supplier<IMap<K, V>> supplier = () -> hzInstance.getMap(name);
+    return supplier.get();
+  }
+
+  public <K> ITopic<K> getHzTopic(String name) {
+    Supplier<ITopic<K>> supplier = () -> hzInstance.getTopic(name);
+    return supplier.get();
+  }
 
   @Override
   public void run(String... args) throws Exception {
     HazelcastInstance hz = hzInstance;
     log.info("{} group name {}", hz.getName(), hz.getConfig().getClusterName());
 
-    testMap = hz.getMap(HzConstants.TEST_MAP);
+    testMap = getHzMap(HzConstants.TEST_MAP);
     log.info("HzMember::Map::testMap initialized");
 
-    testTopic = hz.getTopic(HzConstants.TEST_TOPIC);
+    testTopic = getHzTopic(HzConstants.TEST_TOPIC);
     log.info("HzMember::Topic::testTopic initialized");
 
     testTopic.addMessageListener(new MyHzMessageListener());

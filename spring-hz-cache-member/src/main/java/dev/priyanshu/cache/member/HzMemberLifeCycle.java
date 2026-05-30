@@ -10,14 +10,16 @@ import dev.priyanshu.cache.member.listener.MyHzMembershipListener;
 import java.util.EventListener;
 import java.util.List;
 import java.util.function.Consumer;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Profile;
 
-@Configuration
-public class HzMemberLifeCycle {
+@Configuration(proxyBeanMethods = false)
+class HzMemberLifeCycle {
 
-  private Config getConfig() {
+  @Bean("hzConfig")
+  Config getConfig() {
     var config = new Config();
     config.setClusterName("dev");
 
@@ -26,7 +28,7 @@ public class HzMemberLifeCycle {
     return config;
   }
 
-  void addAllListener(Config config, List<EventListener> listeners) {
+  private void addAllListener(Config config, List<EventListener> listeners) {
     Consumer<List<EventListener>> addListeners =
         (listenerList) -> {
           for (var listener : listeners) {
@@ -36,16 +38,18 @@ public class HzMemberLifeCycle {
     addListeners.accept(listeners);
   }
 
-  @Lazy
+  @Bean("hzListeners")
+  List<EventListener> getListeners() {
+    return List.of(
+        new MyHzLifecycleListener(), new MyHzMembershipListener(), new MyHzClientListener());
+  }
+
   @Bean
-  public HazelcastInstance hazelcastInstance() {
-    var config = getConfig();
-
-    addAllListener(
-        config,
-        List.of(
-            new MyHzLifecycleListener(), new MyHzMembershipListener(), new MyHzClientListener()));
-
+  @Profile("!IT")
+  public HazelcastInstance hazelcastInstance(
+      @Qualifier("hzConfig") Config config,
+      @Qualifier("hzListeners") List<EventListener> listeners) {
+    addAllListener(config, listeners);
     return Hazelcast.newHazelcastInstance(config);
   }
 }
