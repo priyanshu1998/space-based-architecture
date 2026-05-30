@@ -1,8 +1,8 @@
 package dev.priyanshu.cache.client;
 
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.map.IMap;
-import com.hazelcast.topic.ITopic;
+import com.hazelcast.ringbuffer.Ringbuffer;
+import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -12,20 +12,22 @@ import org.springframework.stereotype.Component;
 public class HzClient implements CommandLineRunner {
 
   private static class HzConstants {
-    // Maps
-    public static String TEST_MAP = "test-map";
 
-    // Topic
-    public static String TEST_TOPIC = "test-topic";
+    // Ring
+    public static String EXAMPLE_RING_BUFFER = "example-ringbuffer";
   }
 
   private final HazelcastInstance hzInstance;
 
-  public static IMap<String, String> testMap;
-  public static ITopic<String> testTopic;
+  public static Ringbuffer<String> productRingbuffer;
 
   public HzClient(HazelcastInstance hzInstance) {
     this.hzInstance = hzInstance;
+  }
+
+  public <K> Ringbuffer<K> getHzRingBuffer(String name) {
+    Supplier<Ringbuffer<K>> supplier = () -> hzInstance.getRingbuffer(name);
+    return supplier.get();
   }
 
   @Override
@@ -33,10 +35,7 @@ public class HzClient implements CommandLineRunner {
     var hz = hzInstance;
     log.info("hz {} group name :: {}", hz.getName(), hz.getConfig().getClusterName());
 
-    testMap = hz.getMap(HzConstants.TEST_MAP);
-    log.info("HzMember::Map::testMap referenced");
-
-    testTopic = hz.getTopic(HzConstants.TEST_TOPIC);
-    log.info("HzMember::Topic::testTopic referenced");
+    productRingbuffer = getHzRingBuffer(HzConstants.EXAMPLE_RING_BUFFER);
+    log.info("Ringbuffer::productRingbuffer referenced");
   }
 }

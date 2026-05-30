@@ -2,6 +2,7 @@ package dev.priyanshu.cache.member;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
+import com.hazelcast.ringbuffer.Ringbuffer;
 import com.hazelcast.topic.ITopic;
 import dev.priyanshu.cache.member.listener.MyHzMessageListener;
 import java.util.Map;
@@ -24,6 +25,9 @@ public class HzMember implements CommandLineRunner {
 
     // Topic
     public static String TEST_TOPIC = "test-topic";
+
+    // Ring
+    public static String EXAMPLE_RING_BUFFER = "example-ringbuffer";
   }
 
   /* Configuring Hazelcast manually and not relying on spring boot
@@ -69,6 +73,7 @@ public class HzMember implements CommandLineRunner {
 
   public static Map<String, String> testMap;
   public static ITopic<String> testTopic;
+  public static Ringbuffer<String> exampleRingbuffer;
 
   public <K, V> Map<K, V> getHzMap(String name) {
     Supplier<IMap<K, V>> supplier = () -> hzInstance.getMap(name);
@@ -80,16 +85,24 @@ public class HzMember implements CommandLineRunner {
     return supplier.get();
   }
 
+  public <K> Ringbuffer<K> getHzRingBuffer(String name) {
+    Supplier<Ringbuffer<K>> supplier = () -> hzInstance.getRingbuffer(name);
+    return supplier.get();
+  }
+
   @Override
   public void run(String... args) throws Exception {
     HazelcastInstance hz = hzInstance;
     log.info("{} group name {}", hz.getName(), hz.getConfig().getClusterName());
 
     testMap = getHzMap(HzConstants.TEST_MAP);
-    log.info("HzMember::Map::testMap initialized");
+    log.info("Map::testMap referenced");
 
     testTopic = getHzTopic(HzConstants.TEST_TOPIC);
-    log.info("HzMember::Topic::testTopic initialized");
+    log.info("Topic::testTopic referenced");
+
+    exampleRingbuffer = getHzRingBuffer(HzConstants.EXAMPLE_RING_BUFFER);
+    log.info("Topic::exampleRingbuffer referenced");
 
     testTopic.addMessageListener(new MyHzMessageListener());
   }
