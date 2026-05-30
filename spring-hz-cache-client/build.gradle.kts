@@ -29,6 +29,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-hazelcast")
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
+    implementation("tools.jackson.core:jackson-core:3.1.1") // Jackson 3.x
+    implementation("com.fasterxml.jackson.core:jackson-annotations:2.18.8")
     testImplementation("org.springframework.boot:spring-boot-starter-hazelcast-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }

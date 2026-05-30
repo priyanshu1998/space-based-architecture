@@ -1,3 +1,3 @@
-package dev.priyanshu.cache.workflow;
+package dev.priyanshu.workflow;
 
 public class NotificationWorkflow {}

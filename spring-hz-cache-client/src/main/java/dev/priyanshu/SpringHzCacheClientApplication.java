@@ -1,4 +1,4 @@
-package dev.priyanshu.cache.client;
+package dev.priyanshu;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
